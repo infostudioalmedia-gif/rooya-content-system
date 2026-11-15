@@ -155,12 +155,13 @@ const SERVICES = [
     github: 'https://github.com/infostudioalmedia-gif/carousel'
   },
   {
-    id: 'video',
-    soon: true,
-    name: 'تصميم الفيديو',
-    en: 'Video Design',
-    desc: 'تصميم فيديوهات بهوية رؤية بالذكاء الاصطناعي. الخدمة تحت التجهيز وهتتفتح قريبًا.',
-    img: 'assets/card-video.png'
+    id: 'flow',
+    name: 'تصميم فيديو وصور',
+    en: 'Video & Image Design',
+    desc: 'صمّم فيديوهات وصور بالذكاء الاصطناعي عن طريق Google Flow. بتتفتح في تبويب جديد وبتحتاج حساب جوجل.',
+    img: 'assets/card-flow.png',
+    url: 'https://flow.google.com/',
+    external: true /* جوجل بتمنع الفتح جوه iframe فبتتفتح في تبويب جديد */
   },
   {
     id: 'more',
@@ -178,7 +179,7 @@ const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','
 
 /* ---- build cards ---- */
 const homeUrl = () => location.href.split('#')[0];
-const lnk = s => s.embed === false ? `href="${s.url}${s.url.includes('?') ? '&' : '?'}home=${encodeURIComponent(homeUrl())}"` : `href="#/${s.id}"`;
+const lnk = s => s.external ? `href="${s.url}" target="_blank" rel="noopener"` : s.embed === false ? `href="${s.url}${s.url.includes('?') ? '&' : '?'}home=${encodeURIComponent(homeUrl())}"` : `href="#/${s.id}"`;
 $('grid').innerHTML = SERVICES.map(s => s.soon ? `
   <article class="card off" aria-disabled="true">
     <div class="thumb"><img src="${s.img}" alt="${esc(s.name)} - Coming Soon" loading="lazy"></div>
@@ -242,7 +243,7 @@ function showHome(){
 }
 function route(){
   const m = location.hash.match(/^#\/([\w-]+)/);
-  const s = m && SERVICES.find(x => x.id === m[1] && !x.soon && x.embed !== false);
+  const s = m && SERVICES.find(x => x.id === m[1] && !x.soon && !x.external && x.embed !== false);
   s ? openService(s) : showHome();
 }
 $('vHome').onclick = () => { location.hash = ''; };
