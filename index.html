@@ -123,7 +123,6 @@ footer .copy{direction:rtl}
     <a class="ib" id="vNew" target="_blank" rel="noopener" aria-label="فتح في تبويب جديد"><svg><use href="#i-open"/></svg><span class="lbl">تبويب جديد</span></a>
   </div>
   <div class="frame">
-    <iframe id="vFrame" title="الخدمة" allow="clipboard-write; fullscreen; microphone; camera" referrerpolicy="no-referrer-when-downgrade"></iframe>
     <div class="loading" id="vLoad"><div>جاري فتح الخدمة…<div class="pr"><i></i></div></div></div>
     <div class="help hide" id="vHelp">لو الصفحة ما ظهرتش <a id="vHelpLink" target="_blank" rel="noopener">افتحها في تبويب جديد</a></div>
   </div>
@@ -201,7 +200,18 @@ $('grid').innerHTML = SERVICES.map(s => s.soon ? `
   </article>`).join('');
 
 /* ---- viewer with hash routing so browser/phone Back & Forward work ---- */
-const frame = $('vFrame'), load = $('vLoad'), help = $('vHelp');
+const holder = document.querySelector('.frame'), load = $('vLoad'), help = $('vHelp');
+let frame = null;
+/* iframe جديد في كل فتح: بيمنع إضافة مدخلات سجل تخلّي «رجوع» يلف في مكانه */
+function mountFrame(url){
+  if (frame) frame.remove();
+  frame = document.createElement('iframe');
+  frame.id = 'vFrame'; frame.title = 'الخدمة';
+  frame.setAttribute('allow', 'clipboard-write; fullscreen; microphone; camera');
+  frame.addEventListener('load', () => { load.classList.add('off'); help.classList.add('hide'); clearTimeout(helpTimer); });
+  frame.src = url;
+  holder.insertBefore(frame, holder.firstChild);
+}
 let current = null, helpTimer = null;
 
 function openService(s){
@@ -210,7 +220,7 @@ function openService(s){
     load.classList.remove('off');
     help.classList.add('hide');
     clearTimeout(helpTimer);
-    frame.src = s.url;
+    mountFrame(s.url);
     helpTimer = setTimeout(() => help.classList.remove('hide'), 9000);
   }
   $('vTitle').textContent = s.name;
@@ -228,20 +238,17 @@ function showHome(){
   document.querySelector('footer').classList.remove('hide');
   document.title = 'رؤية إنتاج المحتوى · Rooya AI Content System';
   /* free the iframe so leaving a service really exits it */
-  if (current){ frame.src = 'about:blank'; current = null; }
+  if (current){ if (frame) { frame.remove(); frame = null; } current = null; }
 }
 function route(){
   const m = location.hash.match(/^#\/([\w-]+)/);
   const s = m && SERVICES.find(x => x.id === m[1] && !x.soon && x.embed !== false);
   s ? openService(s) : showHome();
 }
-frame.addEventListener('load', () => {
-  if (frame.src && frame.src !== 'about:blank'){ load.classList.add('off'); help.classList.add('hide'); clearTimeout(helpTimer); }
-});
 $('vHome').onclick = () => { location.hash = ''; };
 $('vBack').onclick = () => history.back();
 $('vFwd').onclick = () => history.forward();
-$('vReload').onclick = () => { const s = SERVICES.find(x => x.id === current); if (s){ load.classList.remove('off'); frame.src = s.url; } };
+$('vReload').onclick = () => { const s = SERVICES.find(x => x.id === current); if (s){ load.classList.remove('off'); mountFrame(s.url); } };
 window.addEventListener('hashchange', route);
 route();
 </script>
